@@ -1,14 +1,14 @@
 import React, { useMemo } from "react";
-import "./CalendarWeek.css";
 
-// Helper: retorna array de Date para os 7 dias começando em weekStart
+// Helper: retorna array de Date para os 6 dias começando em weekStart
 function getWeekDays(weekStart) {
   const days = [];
   const start = new Date(weekStart);
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 6; i++) {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
     days.push(d);
+    
   }
   return days;
 }
@@ -38,6 +38,8 @@ export default function CalendarWeek({
   pixelsPerHour = 60,
   stepMinutes = 30,
   onEventClick, // function(event)
+  onDayClick, // function(dateStr) - chamado quando clica em um dia
+  todayIso, // optional YYYY-MM-DD string to highlight today
 }) {
   const pixelsPerMinute = pixelsPerHour / 60;
 
@@ -64,11 +66,25 @@ export default function CalendarWeek({
     <div className="calendar-week">
       <div className="calendar-header">
         <div className="time-gutter" />
-        {days.map((d) => (
-          <div key={d.toISOString()} className="header-day">
-            {d.toLocaleDateString(undefined, { weekday: "short", day: "numeric" })}
-          </div>
-        ))}
+        {days.map((d) => {
+          const iso = d.toISOString().slice(0,10)
+          const isToday = todayIso ? iso === todayIso : (new Date().toISOString().slice(0,10) === iso)
+          const dayOfWeek = d.getDay();
+          const dayMap = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+          const dayLabel = dayMap[dayOfWeek];
+          return (
+            <div 
+              key={d.toISOString()} 
+              className={`header-day ${isToday ? 'today' : ''}`}
+              onClick={() => onDayClick && onDayClick(iso)}
+              style={{ cursor: onDayClick ? 'pointer' : 'default' }}
+              role={onDayClick ? "button" : undefined}
+              tabIndex={onDayClick ? 0 : undefined}
+            >
+              {dayLabel} {d.getDate()}
+            </div>
+          )
+        })}
       </div>
 
       <div className="calendar-body">
@@ -84,8 +100,9 @@ export default function CalendarWeek({
           {days.map((d) => {
             const key = d.toISOString().slice(0, 10);
             const dayEvents = eventsByDay[key] || [];
+            const isToday = todayIso ? key === todayIso : (new Date().toISOString().slice(0,10) === key)
             return (
-              <div key={key} className="day-column" style={dayColumnStyle}>
+              <div key={key} className={`day-column ${isToday ? 'day-today' : ''}`} style={dayColumnStyle}>
                 <div className="day-grid">
                   {slots.map((_, i) => (
                     <div key={i} className="grid-slot" />

@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import CalendarWeek from "../components/CalendarWeek";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useNavigate } from "react-router-dom";
+import RequireAuth from "../components/RequireAuth";
 import { getAgendas } from "../services/agendaService";
 import { getCompromissos } from "../services/compromissoService";
+import logo from '../assets/logo.svg';
 
 function toEventFromAgenda(a) {
   // agenda: { id, date, start_time, end_time, title, description }
@@ -75,11 +78,8 @@ export default function CalendarPage() {
   }, []);
 
   const handleEventClick = (ev) => {
-    if (ev.type === 'compromisso') {
-      navigate(`/compromissos/edit/${ev.id}`);
-    } else {
-      navigate(`/agendas/edit/${ev.id}`);
-    }
+    const type = ev.type === 'compromisso' ? 'compromisso' : 'agenda';
+    navigate(`/edit-evento/${type}/${ev.id}`);
   };
 
   // weekStart: monday of current week
@@ -89,29 +89,41 @@ export default function CalendarPage() {
   const monday = new Date(today);
   monday.setDate(today.getDate() - diffToMonday);
 
-  return (
-    <div style={{ padding: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-        <h2 style={{ color: "#d63384", margin: 0 }}>Calendário Semanal</h2>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-          <button className="btn-primary" onClick={() => navigate('/agendas/create')}>Adicionar Agenda</button>
-          <button className="btn-primary" onClick={() => navigate('/compromissos/create')} style={{ background: 'linear-gradient(90deg, #7ad3ff, #4fa3ff)' }}>Adicionar Compromisso</button>
-          <button onClick={() => window.location.reload()}>Atualizar</button>
-        </div>
-      </div>
+  const todayIso = new Date().toISOString().slice(0,10)
 
-      {loading ? (
-        <p>Carregando eventos...</p>
-      ) : (
-        <CalendarWeek
-          weekStart={monday}
-          events={events}
-          hourStart={8}
-          hourEnd={20}
-          pixelsPerHour={60}
-          onEventClick={handleEventClick}
-        />
-      )}
-    </div>
+  return (
+    <RequireAuth>
+      <div style={{ padding: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+          <img className ="logo" src={logo} alt="Logo"/>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            
+            <button className="btn-primary" onClick={() => navigate('/criar-evento')} style={{ background: 'linear-gradient(90deg, #7ad3ff, #4fa3ff)' }}>Adicionar Evento</button>
+          {/*<button className="btn-primary" onClick={() => navigate('/agendas/create')}>Adicionar Agenda</button> */} 
+          </div>
+        </div>
+
+        {loading ? (
+          <LoadingSpinner />
+        ) : (
+          <>
+            <CalendarWeek
+              weekStart={monday}
+              events={events}
+              hourStart={8}
+              hourEnd={20}
+              pixelsPerHour={60}
+              onEventClick={handleEventClick}
+              onDayClick={(dateStr) => navigate(`/expand-day?date=${dateStr}`)}
+              todayIso={todayIso}
+            />
+
+            <div style={{ marginTop: 12 }}>
+              <button onClick={() => navigate(`/eventos?date=${todayIso}`)} className="btn-primary">Eventos Hoje</button>
+            </div>
+          </>
+        )}
+      </div>
+    </RequireAuth>
   );
 }
