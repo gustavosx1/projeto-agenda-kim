@@ -86,12 +86,36 @@ button:focus-visible {
   }
 }
 
-/* small helpers used by calendar and forms */
+/* Icones utilizados no calendário e Forms */
 .btn-primary {
   background: linear-gradient(90deg, var(--accent-pink), var(--accent-blue));
   color: white;
   border: none;
 }
+
+.btn-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 8px;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background: linear-gradient(90deg, var(--accent-pink), var(--accent-blue));
+  color: white;
+  cursor: pointer;
+  transition: transform 0.25s, box-shadow 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(255, 95, 168, 0.2);
+}
+
 .muted { color: var(--muted); }
 
 .form{
@@ -227,7 +251,7 @@ button:focus-visible {
 
 .calendar-header {
   display: grid;
-  grid-template-columns: var(--gutter-width) repeat(6, 55px);
+  grid-template-columns: var(--gutter-width) repeat(6, 60px);
   align-items: center;
   gap: 0;
   padding: 8px 0;
@@ -261,7 +285,7 @@ button:focus-visible {
 
 .calendar-body {
   display: grid;
-  grid-template-columns: var(--gutter-width) repeat(6, 55px);
+  grid-template-columns: var(--gutter-width) repeat(6, 60px);
 }
 
 .calendar-body .time-gutter {

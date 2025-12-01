@@ -1,4 +1,4 @@
-import { supabase } from "../supabase/supabase"
+import { supabase } from "../database/supabase"
 
 // Supabase JS v2 APIs: signUp and signInWithPassword accept { email, password }
 export const signUp = async (email, password) => {

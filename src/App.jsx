@@ -5,11 +5,13 @@ import CriarEvento from "./pages/criarEvento.jsx"
 import EditEvento from "./pages/editEvento.jsx"
 import ExpandDay from "./pages/expandDay.jsx"
 import ListaEventos from "./pages/listaEventos.jsx"
-import Login from "./pages/login.jsx";  
+import Login from "./pages/login.jsx";
+import NotificationManager from "./components/NotificationManager.jsx"
 
 function App() {
   return (
     <BrowserRouter>
+      <NotificationManager />
       <Routes>
         <Route path="/" element={<Navigate to="/calendar" replace />} />
         <Route path="/calendar" element={<CalendarPage />} />

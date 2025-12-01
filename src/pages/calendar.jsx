@@ -5,11 +5,11 @@ import { useNavigate } from "react-router-dom";
 import RequireAuth from "../components/RequireAuth";
 import { getAgendas } from "../services/agendaService";
 import { getCompromissos } from "../services/compromissoService";
-import logo from '../assets/logo.svg';
+import { Plus, Calendar } from "lucide-react";
+import logo from "../assets/logo.svg";
 
 function toEventFromAgenda(a) {
-  // agenda: { id, date, start_time, end_time, title, description }
-  // build ISO datetimes in local timezone
+  
   try {
     const date = a.date; // expected YYYY-MM-DD
     const startTime = (a.start_time || "00:00").slice(0,8); // normalize
@@ -95,11 +95,22 @@ export default function CalendarPage() {
     <RequireAuth>
       <div style={{ padding: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <img className ="logo" src={logo} alt="Logo"/>
+          <img className="logo" src={logo} alt="Logo"/>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            
-            <button className="btn-primary" onClick={() => navigate('/criar-evento')} style={{ background: 'linear-gradient(90deg, #7ad3ff, #4fa3ff)' }}>Adicionar Evento</button>
-          {/*<button className="btn-primary" onClick={() => navigate('/agendas/create')}>Adicionar Agenda</button> */} 
+            <button 
+              onClick={() => navigate('/criar-evento')}
+              className="btn-icon"
+              title="Adicionar Evento"
+            >
+              <Plus size={20} />
+            </button>
+            <button 
+              onClick={() => navigate(`/eventos?date=${todayIso}`)}
+              className="btn-icon"
+              title="Eventos Hoje"
+            >
+              <Calendar size={20} />
+            </button>
           </div>
         </div>
 
@@ -110,17 +121,15 @@ export default function CalendarPage() {
             <CalendarWeek
               weekStart={monday}
               events={events}
-              hourStart={8}
-              hourEnd={20}
+              hourStart={7}
+              hourEnd={22}
               pixelsPerHour={60}
               onEventClick={handleEventClick}
               onDayClick={(dateStr) => navigate(`/expand-day?date=${dateStr}`)}
               todayIso={todayIso}
             />
 
-            <div style={{ marginTop: 12 }}>
-              <button onClick={() => navigate(`/eventos?date=${todayIso}`)} className="btn-primary">Eventos Hoje</button>
-            </div>
+            {/* Eventos Hoje button moved to header */}
           </>
         )}
       </div>

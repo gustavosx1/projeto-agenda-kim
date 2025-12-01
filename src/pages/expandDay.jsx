@@ -81,10 +81,10 @@ export default function ExpandDay() {
     navigate(`/edit-evento/${type}/${ev.id}`);
   };
 
-  const slots = generateTimeSlots(8, 20, 30);
+  const slots = generateTimeSlots(7, 22, 30);
   const pixelsPerHour = 60;
   const pixelsPerMinute = pixelsPerHour / 60;
-  const dayHeight = (20 - 8) * pixelsPerHour;
+  const dayHeight = (22 - 7) * pixelsPerHour;
 
   const dayDate = new Date(dateStr);
   const dayMap = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];

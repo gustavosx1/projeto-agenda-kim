@@ -9,7 +9,7 @@ function getTodayDDMM() {
 }
 
 export default function EventoForm({ initialData = {}, onSubmit, loading = false }) {
-  const [isPubli, setIsPubli] = useState(initialData.type === "agenda" || false);
+  const [isPubli, setIsPubli] = useState(initialData.type === "agenda" || true);
   const [form, setForm] = useState({
     date: initialData.date || "",
     start_time: initialData.start_time || "",
@@ -37,6 +37,36 @@ export default function EventoForm({ initialData = {}, onSubmit, loading = false
 
   return (
     <form className="agenda-form" onSubmit={handleFormSubmit}>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+        <h1 style={{ color: "#213547", margin: 0 }}>Criar Evento</h1>
+        <button
+          type="button"
+          onClick={() => setIsPubli(!isPubli)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 32,
+            height: 32,
+            borderRadius: 4,
+            border: "2px solid #f472b6",
+            background: isPubli ? "#f472b6" : "transparent",
+            color: isPubli ? "white" : "#f472b6",
+            cursor: "pointer",
+            fontSize: 16,
+            fontWeight: "bold",
+          }}
+          title={isPubli ? "Publi ativo" : "Publi inativo"}
+        >
+          ✓
+        </button>
+        <span style={{ fontSize: 14, color: "#666" }}>
+          {isPubli ? "Publicação" : "Compromisso"}
+        </span>
+      </div>
+
+
       <div className="form-field-row" style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
         <div style={{ flex: 1 }}>
           <label htmlFor="date" style={{ color: "#334155", fontWeight: 600, fontSize: 13 }}>Data (dd/mm)</label>

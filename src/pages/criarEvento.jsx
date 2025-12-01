@@ -60,34 +60,6 @@ export default function CriarEvento() {
   return (
     <RequireAuth>
       <div className="form">
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-          <h1 style={{ color: "#213547", margin: 0 }}>Criar Evento</h1>
-          <button
-            type="button"
-            onClick={() => setIsPubli(!isPubli)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 32,
-              height: 32,
-              borderRadius: 4,
-              border: "2px solid #f472b6",
-              background: isPubli ? "#f472b6" : "transparent",
-              color: isPubli ? "white" : "#f472b6",
-              cursor: "pointer",
-              fontSize: 16,
-              fontWeight: "bold",
-            }}
-            title={isPubli ? "Publi ativo" : "Publi inativo"}
-          >
-            ✓
-          </button>
-          <span style={{ fontSize: 14, color: "#666" }}>
-            {isPubli ? "Publicação" : "Compromisso"}
-          </span>
-        </div>
-
         <EventoForm onSubmit={handleFormSubmit} loading={loading} />
 
         <div style={{ display: "flex", gap: 8, marginTop: 12, paddingRight: 20 }}>
