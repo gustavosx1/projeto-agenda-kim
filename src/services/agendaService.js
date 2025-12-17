@@ -1,5 +1,5 @@
 import { supabase } from "../database/supabase.js"
-import { createNotificacao } from "../../supabase/functions/notification-controller/index.ts"
+import { createNotificacao, sendPushNotification } from "./notificacaoService.js"
 
 
 export const createAgenda = async (agenda) => {
@@ -21,6 +21,15 @@ export const createAgenda = async (agenda) => {
         userData.user.id,
         `Lembrete: ${createdAgenda.title || "Agenda"} em 30 minutos`,
         notificationTime.toISOString()
+      )
+
+      // Enviar notificação visual imediatamente
+      sendPushNotification(
+        `📅 ${createdAgenda.title || "Nova Agenda"}`,
+        {
+          body: `Criado para ${createdAgenda.start_time || ""}`,
+          tag: `agenda-${createdAgenda.id}`
+        }
       )
     }
   }

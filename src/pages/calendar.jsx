@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import CalendarWeek from "../components/CalendarWeek";
+import ColorLegend from "../components/ColorLegend";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useNavigate } from "react-router-dom";
 import RequireAuth from "../components/RequireAuth";
@@ -118,6 +119,7 @@ export default function CalendarPage() {
           <LoadingSpinner />
         ) : (
           <>
+            <ColorLegend />
             <CalendarWeek
               weekStart={monday}
               events={events}

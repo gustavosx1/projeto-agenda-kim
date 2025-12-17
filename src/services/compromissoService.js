@@ -1,10 +1,11 @@
 import { supabase } from "../database/supabase.js"
-import { createNotificacao } from "./notificacaoService.js"
+import { createNotificacao, sendPushNotification } from "./notificacaoService.js"
+
 
 export const createCompromisso = async (compromisso) => {
   const { data, error } = await supabase.from("compromissos").insert(compromisso).select()
   if (error) throw error
-  
+
   // Criar notificação para o evento criado
   const createdCompromisso = data[0]
   if (createdCompromisso) {
@@ -15,15 +16,24 @@ export const createCompromisso = async (compromisso) => {
       const eventDate = new Date(createdCompromisso.date)
       eventDate.setHours(parseInt(hours), parseInt(minutes))
       const notificationTime = new Date(eventDate.getTime() - 30 * 60000) // 30 minutos antes
-      
+
       await createNotificacao(
         userData.user.id,
         `Lembrete: ${createdCompromisso.title || "Compromisso"} em 30 minutos`,
         notificationTime.toISOString()
       )
+
+      // Enviar notificação visual imediatamente
+      sendPushNotification(
+        `⏰ ${createdCompromisso.title || "Novo Compromisso"}`,
+        {
+          body: `Criado para ${createdCompromisso.start_time || ""}`,
+          tag: `compromisso-${createdCompromisso.id}`
+        }
+      )
     }
   }
-  
+
   return data[0]
 }
 

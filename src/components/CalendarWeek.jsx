@@ -1,10 +1,10 @@
 import React, { useMemo } from "react";
 
-// Helper: retorna array de Date para os 6 dias começando em weekStart
+// Helper: retorna array de Date para os 7 dias começando em weekStart
 function getWeekDays(weekStart) {
   const days = [];
   const start = new Date(weekStart);
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 7; i++) {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
     days.push(d);
