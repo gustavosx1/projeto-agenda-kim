@@ -1,16 +1,77 @@
-# React + Vite
+# Agenda Bianca - Aplicação de Calendário com React + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicação moderna de agendamento com suporte a eventos, notificações push e sincronização em tempo real com Supabase.
 
-Currently, two official plugins are available:
+## 🚀 Instalação
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. **Clone o repositório**
+```bash
+git clone https://github.com/gustavosx1/projeto-agenda-kim.git
+cd agenda-bianca
+```
 
-## React Compiler
+2. **Instale as dependências**
+```bash
+npm install
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+3. **Configure as variáveis de ambiente**
+```bash
+# Copie o arquivo de exemplo
+cp .env.example .env
 
-## Expanding the ESLint configuration
+# Edite .env com suas chaves do Supabase
+VITE_SUPABASE_URL=https://seu-projeto.supabase.co
+VITE_SUPABASE_ANON_KEY=sua-chave-anonima
+VITE_VAPID_PUBLIC_KEY=sua-chave-vapid-publica
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+4. **Inicie o servidor de desenvolvimento**
+```bash
+npm run dev
+```
+
+## 📦 Build para Produção
+
+```bash
+npm run build
+```
+
+## 🔐 Variáveis de Ambiente
+
+As seguintes variáveis de ambiente são necessárias (todas públicas e seguras):
+
+- `VITE_SUPABASE_URL` - URL do seu projeto Supabase
+- `VITE_SUPABASE_ANON_KEY` - Chave anônima do Supabase (segura para expor)
+- `VITE_VAPID_PUBLIC_KEY` - Chave pública VAPID para Web Push (segura para expor)
+
+**Nota:** As variáveis com prefixo `VITE_` são públicas por design no Vite e são expostas no bundle. Use apenas chaves que são seguras de expor publicamente.
+
+## 🌐 Deploy no Netlify
+
+O projeto inclui `netlify.toml` configurado para:
+- Builds automáticos
+- Variáveis de ambiente do Supabase
+- Headers de segurança
+- Configuração de secrets scanning
+
+Simplesmente conecte seu repositório ao Netlify e configure as variáveis de ambiente no painel da Netlify.
+
+## 📱 Funcionalidades
+
+- ✅ Calendário semanal com vista de 7 dias
+- ✅ Agendas (Publis) e Compromissos
+- ✅ Notificações push web
+- ✅ Autenticação com Supabase
+- ✅ Formulários dinâmicos
+- ✅ Sincronização em tempo real
+- ✅ Responsivo para mobile
+
+## 🛠️ Stack Tecnológico
+
+- React 18+
+- Vite
+- Supabase (Auth + Database + Edge Functions)
+- Web Push API
+- Netlify
+
