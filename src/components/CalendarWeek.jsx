@@ -3,12 +3,10 @@ import React, { useMemo } from "react";
 // Helper: retorna array de Date para os 7 dias começando em weekStart
 function getWeekDays(weekStart) {
   const days = [];
-  const start = new Date(weekStart);
+  let date = new Date(weekStart);
   for (let i = 0; i < 7; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    days.push(d);
-    
+    days.push(new Date(date));
+    date.setDate(date.getDate() + 1);
   }
   return days;
 }
@@ -18,16 +16,12 @@ function generateTimeSlots(hourStart = 8, hourEnd = 20, stepMinutes = 30) {
   const slots = [];
   for (let h = hourStart; h <= hourEnd; h++) {
     for (let m = 0; m < 60; m += stepMinutes) {
-      const label = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-      slots.push({ hour: h, minute: m, label });
+      slots.push({
+        label: `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
+      });
     }
   }
   return slots;
-}
-
-// Converte string/Date para Date segura
-function toDate(d) {
-  return d instanceof Date ? d : new Date(d);
 }
 
 export default function CalendarWeek({
@@ -50,8 +44,7 @@ export default function CalendarWeek({
   const eventsByDay = useMemo(() => {
     const map = {};
     events.forEach((ev) => {
-      const s = toDate(ev.start);
-      const key = s.toISOString().slice(0, 10);
+      const key = new Date(ev.start).toISOString().slice(0, 10);
       if (!map[key]) map[key] = [];
       map[key].push(ev);
     });
@@ -100,7 +93,8 @@ export default function CalendarWeek({
           {days.map((d) => {
             const key = d.toISOString().slice(0, 10);
             const dayEvents = eventsByDay[key] || [];
-            const isToday = todayIso ? key === todayIso : (new Date().toISOString().slice(0,10) === key)
+            const isToday = todayIso ? key === todayIso : key === new Date().toISOString().slice(0, 10);
+            
             return (
               <div key={key} className={`day-column ${isToday ? 'day-today' : ''}`} style={dayColumnStyle}>
                 <div className="day-grid">
@@ -108,26 +102,20 @@ export default function CalendarWeek({
                     <div key={i} className="grid-slot" />
                   ))}
                   {dayEvents.map((ev) => {
-                    const start = toDate(ev.start);
-                    const end = toDate(ev.end);
-                    // calcular top e altura em pixels com base em hourStart
-                    const startMinutes = start.getHours() * 60 + start.getMinutes();
-                    const endMinutes = end.getHours() * 60 + end.getMinutes();
-                    const minutesFromStart = Math.max(0, startMinutes - hourStart * 60);
-                    const duration = Math.max(15, endMinutes - startMinutes);
-                    const top = minutesFromStart * pixelsPerMinute;
-                    const height = duration * pixelsPerMinute;
+                    const start = new Date(ev.start);
+                    const end = new Date(ev.end);
+                    const startMinutes = start.getHours() * 60 + start.getMinutes() - hourStart * 60;
+                    const duration = (end - start) / (1000 * 60);
+                    const top = Math.max(0, startMinutes * pixelsPerMinute);
+                    const height = Math.max(15, duration * pixelsPerMinute);
 
-                    const startLabel = new Date(ev.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const endLabel = new Date(ev.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const typeClass = ev.type === 'compromisso' ? 'event-compromisso' : 'event-agenda';
                     return (
                       <div
-                        key={ev.id || `${ev.title}-${start.toISOString()}`}
-                        className={`event-item ${typeClass}`}
+                        key={ev.id}
+                        className={`event-item ${ev.type === 'compromisso' ? 'event-compromisso' : 'event-agenda'} ${ev.raw?.completed ? 'event-completed' : ''}`}
                         style={{ top: `${top}px`, height: `${height}px` }}
-                        title={`${ev.title} (${startLabel} - ${endLabel})`}
-                        onClick={() => onEventClick && onEventClick(ev)}
+                        title={ev.title}
+                        onClick={() => onEventClick?.(ev)}
                         role={onEventClick ? "button" : undefined}
                         tabIndex={onEventClick ? 0 : undefined}
                       >

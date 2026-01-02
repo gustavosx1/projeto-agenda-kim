@@ -5,11 +5,11 @@ export default function ColorLegend() {
     <div className="color-legend">
       <div className="legend-item">
         <div className="legend-color publi"></div>
-        <span>Rosa = Publi/Agenda</span>
+        <span>Publi/Agenda</span>
       </div>
       <div className="legend-item">
         <div className="legend-color compromisso"></div>
-        <span>Azul = Compromisso Kim</span>
+        <span>Compromisso Kim</span>
       </div>
     </div>
   )

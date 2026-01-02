@@ -1,40 +1,43 @@
 import { supabase } from "../database/supabase.js"
 import { createNotificacao, sendPushNotification } from "./notificacaoService.js"
 
+const createEventNotification = async (userId, event, type) => {
+  const [hours, minutes] = (event.start_time || "09:00").split(":")
+  const eventDate = new Date(event.date)
+  eventDate.setHours(parseInt(hours), parseInt(minutes))
+  const notificationTime = new Date(eventDate.getTime() - 30 * 60000)
+
+  const emoji = type === 'agenda' ? '📅' : '⏰'
+  const typeLabel = type === 'agenda' ? 'Agenda' : 'Compromisso'
+
+  await createNotificacao(
+    userId,
+    `Lembrete: ${event.title || typeLabel} em 30 minutos`,
+    notificationTime.toISOString()
+  )
+
+  sendPushNotification(
+    `${emoji} ${event.title || `Novo ${typeLabel}`}`,
+    {
+      body: `Criado para ${event.start_time || ""}`,
+      tag: `${type}-${event.id}`
+    }
+  )
+}
 
 export const createCompromisso = async (compromisso) => {
   const { data, error } = await supabase.from("compromissos").insert(compromisso).select()
   if (error) throw error
 
-  // Criar notificação para o evento criado
   const createdCompromisso = data[0]
   if (createdCompromisso) {
     const { data: userData } = await supabase.auth.getUser()
     if (userData?.user?.id) {
-      // Calcular o tempo de envio da notificação (30 minutos antes)
-      const [hours, minutes] = (createdCompromisso.start_time || "09:00").split(":")
-      const eventDate = new Date(createdCompromisso.date)
-      eventDate.setHours(parseInt(hours), parseInt(minutes))
-      const notificationTime = new Date(eventDate.getTime() - 30 * 60000) // 30 minutos antes
-
-      await createNotificacao(
-        userData.user.id,
-        `Lembrete: ${createdCompromisso.title || "Compromisso"} em 30 minutos`,
-        notificationTime.toISOString()
-      )
-
-      // Enviar notificação visual imediatamente
-      sendPushNotification(
-        `⏰ ${createdCompromisso.title || "Novo Compromisso"}`,
-        {
-          body: `Criado para ${createdCompromisso.start_time || ""}`,
-          tag: `compromisso-${createdCompromisso.id}`
-        }
-      )
+      await createEventNotification(userData.user.id, createdCompromisso, 'compromisso')
     }
   }
 
-  return data[0]
+  return createdCompromisso
 }
 
 export const getCompromissos = async () => {

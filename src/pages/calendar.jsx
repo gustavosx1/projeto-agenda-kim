@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import CalendarWeek from "../components/CalendarWeek";
 import ColorLegend from "../components/ColorLegend";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -9,43 +9,20 @@ import { getCompromissos } from "../services/compromissoService";
 import { Plus, Calendar } from "lucide-react";
 import logo from "../assets/logo.svg";
 
-function toEventFromAgenda(a) {
-  
+function toEvent(item, type) {
   try {
-    const date = a.date; // expected YYYY-MM-DD
-    const startTime = (a.start_time || "00:00").slice(0,8); // normalize
-    const endTime = (a.end_time || "00:30").slice(0,8);
-    const start = new Date(`${date}T${startTime}`);
-    const end = new Date(`${date}T${endTime}`);
+    const start = new Date(`${item.date}T${(item.start_time || "00:00").slice(0, 5)}`);
+    const end = new Date(`${item.date}T${(item.end_time || "00:30").slice(0, 5)}`);
+    
     return {
-      id: a.id,
-      title: a.title || a.description || "(sem título)",
+      id: item.id,
+      title: item.title || item.description || "(sem título)",
       start: start.toISOString(),
       end: end.toISOString(),
-      type: 'agenda',
-      raw: a,
+      type,
+      raw: item,
     };
-  } catch (err) {
-    return null;
-  }
-}
-
-function toEventFromCompromisso(c) {
-  try {
-    const date = c.date;
-    const startTime = (c.start_time || "00:00").slice(0,8);
-    const endTime = (c.end_time || "00:30").slice(0,8);
-    const start = new Date(`${date}T${startTime}`);
-    const end = new Date(`${date}T${endTime}`);
-    return {
-      id: c.id,
-      title: c.title || "(sem título)",
-      start: start.toISOString(),
-      end: end.toISOString(),
-      type: 'compromisso',
-      raw: c,
-    };
-  } catch (err) {
+  } catch {
     return null;
   }
 }
@@ -58,16 +35,19 @@ export default function CalendarPage() {
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      setLoading(true);
       try {
         const [agendas, compromissos] = await Promise.all([
           getAgendas(),
           getCompromissos()
         ]);
         if (!mounted) return;
-        const agendaEvents = (agendas || []).map(toEventFromAgenda).filter(Boolean);
-        const compromissoEvents = (compromissos || []).map(toEventFromCompromisso).filter(Boolean);
-        setEvents([...agendaEvents, ...compromissoEvents]);
+        
+        const allEvents = [
+          ...(agendas || []).map(a => toEvent(a, 'agenda')),
+          ...(compromissos || []).map(c => toEvent(c, 'compromisso'))
+        ].filter(Boolean);
+        
+        setEvents(allEvents);
       } catch (err) {
         console.error("Erro ao carregar eventos:", err);
       } finally {
@@ -78,19 +58,16 @@ export default function CalendarPage() {
     return () => { mounted = false };
   }, []);
 
-  const handleEventClick = (ev) => {
-    const type = ev.type === 'compromisso' ? 'compromisso' : 'agenda';
-    navigate(`/edit-evento/${type}/${ev.id}`);
-  };
+  const handleEventClick = useCallback((ev) => {
+    navigate(`/edit-evento/${ev.type}/${ev.id}`);
+  }, [navigate]);
 
-  // weekStart: monday of current week
   const today = new Date();
-  const day = today.getDay();
-  const diffToMonday = (day + 6) % 7; // 0->mon
+  const mondayOffset = (today.getDay() + 6) % 7;
   const monday = new Date(today);
-  monday.setDate(today.getDate() - diffToMonday);
+  monday.setDate(today.getDate() - mondayOffset);
 
-  const todayIso = new Date().toISOString().slice(0,10)
+  const todayIso = today.toISOString().slice(0, 10);
 
   return (
     <RequireAuth>

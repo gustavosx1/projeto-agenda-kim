@@ -1,69 +1,65 @@
 import { supabase } from "../database/supabase.js"
 
 /**
- * Criar notificação no database
- * A edge function detectará e enviará automaticamente
+ * Criar notificação no database (edge function enviará automaticamente)
  */
 export const createNotificacao = async (userId, message, sendAt) => {
   try {
-    // Obter subscription do usuário salva
-    const { data: subs, error: subError } = await supabase
+    // Obter subscription do usuário
+    const { data: subs } = await supabase
       .from('notificacoes')
       .select('subscription')
       .eq('user_id', userId)
       .eq('message', 'SUBSCRIPTION_SAVED')
       .limit(1)
 
-    const subscription = subs && subs.length > 0 ? subs[0].subscription : null
+    // Montar objeto de inserção dinamicamente
+    const notificationData = {
+      user_id: userId,
+      message,
+      send_at: sendAt,
+      sent: false
+    }
+
+    // Adicionar subscription apenas se existir
+    if (subs?.[0]?.subscription) {
+      notificationData.subscription = subs[0].subscription
+    }
 
     const { data, error } = await supabase
       .from("notificacoes")
-      .insert({
-        user_id: userId,
-        message,
-        send_at: sendAt,
-        sent: false,
-        subscription: subscription
-      })
+      .insert(notificationData)
       .select()
 
     if (error) throw error
-    console.log("Notificação criada no DB:", data[0])
-    return data[0]
+    return data?.[0] || null
   } catch (err) {
-    console.error("Erro ao criar notificação no database:", err)
+    console.error("Erro ao criar notificação:", err)
     return null
   }
 }
 
 /**
- * Enviar notificação visual ao usuário (local)
- * Funciona em PWA com Service Worker
+ * Enviar notificação visual imediata ao usuário
  */
 export const sendPushNotification = (title, options = {}) => {
-  // Usar Notification API padrão do navegador
-  if ('Notification' in window && Notification.permission === 'granted') {
-    // Se há service worker registrado, usar através dele
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({
-        type: 'SHOW_NOTIFICATION',
-        title,
-        options: {
-          icon: '/logo.svg',
-          badge: '/logo.svg',
-          tag: 'agenda-notification',
-          ...options
-        }
-      })
-    } else {
-      // Fallback: notificação direta (menos confiável em background)
-      new Notification(title, {
-        icon: '/logo.svg',
-        badge: '/logo.svg',
-        tag: 'agenda-notification',
-        ...options
-      })
-    }
+  if (!('Notification' in window) || Notification.permission !== 'granted') return
+
+  const notificationOptions = {
+    icon: '/logo.svg',
+    badge: '/logo.svg',
+    tag: 'agenda-notification',
+    ...options
+  }
+
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: 'SHOW_NOTIFICATION',
+      title,
+      options: notificationOptions
+    })
+  } else {
+    new Notification(title, notificationOptions)
   }
 }
 
@@ -71,16 +67,12 @@ export const sendPushNotification = (title, options = {}) => {
  * Solicitar permissão para notificações
  */
 export const requestNotificationPermission = async () => {
-  if ('Notification' in window) {
-    if (Notification.permission === 'granted') {
-      return true
-    }
-    if (Notification.permission !== 'denied') {
-      const permission = await Notification.requestPermission()
-      return permission === 'granted'
-    }
-  }
-  return false
+  if (!('Notification' in window)) return false
+  if (Notification.permission === 'granted') return true
+  if (Notification.permission === 'denied') return false
+
+  const permission = await Notification.requestPermission()
+  return permission === 'granted'
 }
 
 /**

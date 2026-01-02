@@ -1,40 +1,43 @@
 import { supabase } from "../database/supabase.js"
 import { createNotificacao, sendPushNotification } from "./notificacaoService.js"
 
+const createEventNotification = async (userId, event, type) => {
+  const [hours, minutes] = (event.start_time || "09:00").split(":")
+  const eventDate = new Date(event.date)
+  eventDate.setHours(parseInt(hours), parseInt(minutes))
+  const notificationTime = new Date(eventDate.getTime() - 30 * 60000)
+
+  const emoji = type === 'agenda' ? '📅' : '⏰'
+  const typeLabel = type === 'agenda' ? 'Agenda' : 'Compromisso'
+
+  await createNotificacao(
+    userId,
+    `Lembrete: ${event.title || typeLabel} em 30 minutos`,
+    notificationTime.toISOString()
+  )
+
+  sendPushNotification(
+    `${emoji} ${event.title || `Novo ${typeLabel}`}`,
+    {
+      body: `Criado para ${event.start_time || ""}`,
+      tag: `${type}-${event.id}`
+    }
+  )
+}
 
 export const createAgenda = async (agenda) => {
   const { data, error } = await supabase.from("agendas").insert(agenda).select()
   if (error) throw error
 
-  // Criar notificação para o evento criado
   const createdAgenda = data[0]
   if (createdAgenda) {
     const { data: userData } = await supabase.auth.getUser()
     if (userData?.user?.id) {
-      // Calcular o tempo de envio da notificação (30 minutos antes)
-      const [hours, minutes] = (createdAgenda.start_time || "09:00").split(":")
-      const eventDate = new Date(createdAgenda.date)
-      eventDate.setHours(parseInt(hours), parseInt(minutes))
-      const notificationTime = new Date(eventDate.getTime() - 30 * 60000) // 30 minutos antes
-
-      await createNotificacao(
-        userData.user.id,
-        `Lembrete: ${createdAgenda.title || "Agenda"} em 30 minutos`,
-        notificationTime.toISOString()
-      )
-
-      // Enviar notificação visual imediatamente
-      sendPushNotification(
-        `📅 ${createdAgenda.title || "Nova Agenda"}`,
-        {
-          body: `Criado para ${createdAgenda.start_time || ""}`,
-          tag: `agenda-${createdAgenda.id}`
-        }
-      )
+      await createEventNotification(userData.user.id, createdAgenda, 'agenda')
     }
   }
 
-  return data[0]
+  return createdAgenda
 }
 
 export const getAgendas = async () => {
@@ -47,7 +50,6 @@ export const getAgendas = async () => {
   return data;
 };
 
-// 
 export const getAgendaById = async (id) => {
   const { data, error } = await supabase
     .from("agendas")

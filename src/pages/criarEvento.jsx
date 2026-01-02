@@ -4,27 +4,17 @@ import RequireAuth from "../components/RequireAuth";
 import EventoForm from "../components/eventoForm";
 import { createAgenda } from "../services/agendaService";
 import { createCompromisso } from "../services/compromissoService";
+import { convertDDMMtoYYYYMMDD } from "../utils/dateUtils";
 
 export default function CriarEvento() {
   const navigate = useNavigate();
-  const [isPubli, setIsPubli] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleFormSubmit = async (formData) => {
     setLoading(true);
     try {
-      // converter dd/mm para YYYY-MM-DD
-      const today = new Date();
-      const [day, month] = formData.date.split("/");
-      const year = today.getFullYear();
-      // validar se a data é válida
-      const dateObj = new Date(year, parseInt(month, 10) - 1, parseInt(day, 10));
-      if (isNaN(dateObj.getTime())) {
-        throw new Error("Data inválida");
-      }
-      const dateStr = dateObj.toISOString().slice(0, 10);
+      const dateStr = convertDDMMtoYYYYMMDD(formData.date);
 
-      // preparar dados básicos
       const baseData = {
         date: dateStr,
         start_time: formData.start_time,
@@ -34,7 +24,6 @@ export default function CriarEvento() {
       };
 
       if (formData.isPubli) {
-        // salvar em tabela de agendas com campos extras
         const agendaData = {
           ...baseData,
           instagram: formData.instagram,
@@ -44,7 +33,6 @@ export default function CriarEvento() {
         };
         await createAgenda(agendaData);
       } else {
-        // salvar em tabela de compromissos (sem campos extras)
         await createCompromisso(baseData);
       }
 

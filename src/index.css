@@ -61,15 +61,17 @@ button {
   font-weight: 500;
   font-family: inherit;
   background: linear-gradient(90deg, var(--accent-pink), var(--accent-blue));
+  color: white;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: transform 0.25s, box-shadow 0.25s;
 }
+
 button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(122,211,255,0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(255, 95, 168, 0.2);
 }
-button:focus,
-button:focus-visible {
+
+button:focus, button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
@@ -81,12 +83,9 @@ button:focus-visible {
   a:hover {
     color: #747bff;
   }
-  button {
-    background-color: white;
-  }
 }
 
-/* Icones utilizados no calendário e Forms */
+/* Button Variants */
 .btn-primary {
   background: linear-gradient(90deg, var(--accent-pink), var(--accent-blue));
   color: white;
@@ -97,28 +96,15 @@ button:focus-visible {
   width: 44px;
   height: 44px;
   border-radius: 8px;
-  border: 1px solid transparent;
   padding: 8px;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background: linear-gradient(90deg, var(--accent-pink), var(--accent-blue));
-  color: white;
-  cursor: pointer;
-  transition: transform 0.25s, box-shadow 0.25s;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.btn-icon:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(255, 95, 168, 0.2);
-}
-
-.muted { color: var(--muted); }
-
-.form{
+.muted { 
+  color: var(--muted); 
+}.form{
   padding-left: 20px;
   width: 100%;
   max-width: 600px;
@@ -357,6 +343,15 @@ button:focus-visible {
   box-shadow: 0 6px 14px rgba(74, 163, 255, 0.2);
 }
 
+.event-item.event-completed {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.event-item.event-completed .event-title {
+  text-decoration: line-through;
+}
+
 .event-title {
   font-weight: 700;
   white-space: nowrap;
@@ -464,6 +459,7 @@ button:focus-visible {
   min-width: 80px;
   border-right: 1px solid rgba(0, 0, 0, 0.1);
   background: #f9f9f9;
+  overflow: hidden;
 }
 
 .expand-day-calendar .time-slot-label {
@@ -861,3 +857,53 @@ button:focus-visible {
 .legend-color.compromisso {
   background-color: var(--accent-blue);
 }
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-content {
+    max-width: 95vw;
+    padding: 16px;
+  }
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+

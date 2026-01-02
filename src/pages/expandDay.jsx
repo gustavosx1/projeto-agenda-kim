@@ -1,18 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import RequireAuth from "../components/RequireAuth";
 import LoadingSpinner from "../components/LoadingSpinner";
+import DetailModal from "../components/DetailModal";
 import { getAgendas } from "../services/agendaService";
 import { getCompromissos } from "../services/compromissoService";
+import { deleteAgenda } from "../services/agendaService";
+import { deleteCompromisso } from "../services/compromissoService";
 
-// Helper: gera labels de tempo a cada 30 minutos entre hourStart e hourEnd
-function generateTimeSlots(hourStart = 8, hourEnd = 20, stepMinutes = 30) {
+// Helper: gera labels de tempo a cada 1 hora entre hourStart e hourEnd
+function generateTimeSlots(hourStart = 7, hourEnd = 22) {
   const slots = [];
   for (let h = hourStart; h <= hourEnd; h++) {
-    for (let m = 0; m < 60; m += stepMinutes) {
-      const label = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-      slots.push({ hour: h, minute: m, label });
-    }
+    const label = `${String(h).padStart(2, "0")}:00`;
+    slots.push({ hour: h, minute: 0, label });
   }
   return slots;
 }
@@ -28,6 +29,26 @@ export default function ExpandDay() {
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showDetail, setShowDetail] = useState(false);
+  
+  const timeGutterRef = useRef(null);
+  const dayContainerRef = useRef(null);
+
+  // Sincronizar scroll entre time-gutter e day-container
+  useEffect(() => {
+    const handleScroll = (e) => {
+      const scrollTop = e.target.scrollTop;
+      if (timeGutterRef.current) {
+        timeGutterRef.current.scrollTop = scrollTop;
+      }
+    };
+
+    if (dayContainerRef.current) {
+      dayContainerRef.current.addEventListener('scroll', handleScroll);
+      return () => dayContainerRef.current?.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -77,16 +98,41 @@ export default function ExpandDay() {
   }, [dateStr]);
 
   const handleEventClick = (ev) => {
+    setSelectedEvent(ev);
+    setShowDetail(true);
+  };
+
+  const handleDelete = async (ev) => {
+    if (!window.confirm(`Deletar "${ev.title}"?`)) return;
+
+    try {
+      if (ev.type === "compromisso") {
+        await deleteCompromisso(ev.id);
+      } else {
+        await deleteAgenda(ev.id);
+      }
+      setEvents(events.filter(e => e.id !== ev.id));
+      setShowDetail(false);
+      alert("Evento deletado com sucesso");
+    } catch (err) {
+      console.error("Erro ao deletar:", err);
+      alert("Erro ao deletar evento");
+    }
+  };
+
+  const handleEdit = (ev) => {
     const type = ev.type === "compromisso" ? "compromisso" : "agenda";
     navigate(`/edit-evento/${type}/${ev.id}`);
   };
 
-  const slots = generateTimeSlots(7, 22, 30);
+  const slots = generateTimeSlots(7, 22);
   const pixelsPerHour = 60;
   const pixelsPerMinute = pixelsPerHour / 60;
   const dayHeight = (22 - 7) * pixelsPerHour;
 
-  const dayDate = new Date(dateStr);
+  // Criar data a partir de string YYYY-MM-DD sem problemas de timezone
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const dayDate = new Date(year, month - 1, day);
   const dayMap = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
   const dayLabel = dayMap[dayDate.getDay()];
   const formattedDate = dayDate.toLocaleDateString("pt-BR", {
@@ -116,7 +162,7 @@ export default function ExpandDay() {
           <LoadingSpinner />
         ) : (
           <div className="expand-day-calendar">
-            <div className="time-gutter">
+            <div className="time-gutter" ref={timeGutterRef}>
               {slots.map((s, i) => (
                 <div key={i} className="time-slot-label">
                   {s.label}
@@ -124,7 +170,7 @@ export default function ExpandDay() {
               ))}
             </div>
 
-            <div className="day-container" style={{ height: `${dayHeight}px` }}>
+            <div className="day-container" ref={dayContainerRef} style={{ height: `${dayHeight}px` }}>
               <div className="day-grid">
                 {slots.map((_, i) => (
                   <div key={i} className="grid-slot" />
@@ -134,7 +180,7 @@ export default function ExpandDay() {
                   const end = toDate(ev.end);
                   const startMinutes = start.getHours() * 60 + start.getMinutes();
                   const endMinutes = end.getHours() * 60 + end.getMinutes();
-                  const minutesFromStart = Math.max(0, startMinutes - 8 * 60);
+                  const minutesFromStart = Math.max(0, startMinutes - 7 * 60);
                   const duration = Math.max(15, endMinutes - startMinutes);
                   const top = minutesFromStart * pixelsPerMinute;
                   const height = duration * pixelsPerMinute;
@@ -142,10 +188,12 @@ export default function ExpandDay() {
                   const startLabel = start.toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
+                    hour12: false,
                   });
                   const endLabel = end.toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
+                    hour12: false,
                   });
                   const typeClass =
                     ev.type === "compromisso" ? "event-compromisso" : "event-agenda";
@@ -181,6 +229,161 @@ export default function ExpandDay() {
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {showDetail && selectedEvent && (
+          <div className="modal-overlay" onClick={() => setShowDetail(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <h2 style={{ margin: 0, color: '#213547' }}>{selectedEvent.title}</h2>
+                <button 
+                  onClick={() => setShowDetail(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    color: '#666'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div style={{ marginBottom: 16, color: '#666', fontSize: '14px' }}>
+                <p><strong>Tipo:</strong> {selectedEvent.type === 'compromisso' ? 'Compromisso' : 'Publi'}</p>
+                {selectedEvent.raw?.start_time && (
+                  <p><strong>Hora:</strong> {selectedEvent.raw.start_time} - {selectedEvent.raw.end_time}</p>
+                )}
+              </div>
+
+              {selectedEvent.raw?.description && (
+                <div style={{ marginBottom: 16 }}>
+                  <p><strong>{selectedEvent.type === 'compromisso' ? 'Descrição' : 'Briefing'}:</strong></p>
+                  <div style={{
+                    color: '#334155',
+                    lineHeight: '1.6',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    padding: '12px',
+                    backgroundColor: '#f8f9fa',
+                    borderRadius: '6px'
+                  }}>
+                    {selectedEvent.raw.description}
+                  </div>
+                </div>
+              )}
+
+              {selectedEvent.type === 'agenda' && (
+                <>
+                  {selectedEvent.raw?.instagram && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, padding: '8px 12px', backgroundColor: '#f8f9fa', borderRadius: '6px' }}>
+                      <div>
+                        <strong>Instagram:</strong> {selectedEvent.raw.instagram}
+                      </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedEvent.raw.instagram);
+                          alert('Copiado!');
+                        }}
+                        style={{
+                          background: 'var(--accent-pink)',
+                          color: 'white',
+                          border: 'none',
+                          padding: '4px 12px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          whiteSpace: 'nowrap',
+                          marginLeft: '8px'
+                        }}
+                      >
+                        Copiar
+                      </button>
+                    </div>
+                  )}
+                  {selectedEvent.raw?.link && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, padding: '8px 12px', backgroundColor: '#f8f9fa', borderRadius: '6px' }}>
+                      <div>
+                        <strong>Link:</strong> <a href={selectedEvent.raw.link} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-pink)' }}>{selectedEvent.raw.link}</a>
+                      </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedEvent.raw.link);
+                          alert('Copiado!');
+                        }}
+                        style={{
+                          background: 'var(--accent-pink)',
+                          color: 'white',
+                          border: 'none',
+                          padding: '4px 12px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          whiteSpace: 'nowrap',
+                          marginLeft: '8px'
+                        }}
+                      >
+                        Copiar
+                      </button>
+                    </div>
+                  )}
+                  {selectedEvent.raw?.cupom && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, padding: '8px 12px', backgroundColor: '#f8f9fa', borderRadius: '6px' }}>
+                      <div>
+                        <strong>Cupom:</strong> {selectedEvent.raw.cupom}
+                      </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedEvent.raw.cupom);
+                          alert('Copiado!');
+                        }}
+                        style={{
+                          background: 'var(--accent-pink)',
+                          color: 'white',
+                          border: 'none',
+                          padding: '4px 12px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          whiteSpace: 'nowrap',
+                          marginLeft: '8px'
+                        }}
+                      >
+                        Copiar
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                <button 
+                  onClick={() => handleEdit(selectedEvent)}
+                  className="btn-primary"
+                >
+                  Editar
+                </button>
+                <button 
+                  onClick={() => handleDelete(selectedEvent)}
+                  style={{
+                    background: '#dc2626',
+                    color: 'white',
+                    padding: '0.6em 1.2em',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 500
+                  }}
+                >
+                  Deletar
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

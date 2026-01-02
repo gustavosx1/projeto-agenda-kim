@@ -7,8 +7,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
 
 function formatTimeRange(startIso, endIso) {
   try {
-    const s = new Date(startIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    const e = new Date(endIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const s = new Date(startIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+    const e = new Date(endIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
     return `${s} - ${e}`
   } catch {
     return ''

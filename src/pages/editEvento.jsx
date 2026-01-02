@@ -5,9 +5,10 @@ import EventoForm from "../components/eventoForm";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { getAgendaById, updateAgenda } from "../services/agendaService";
 import { getCompromissoById, updateCompromisso } from "../services/compromissoService";
+import { convertYYYYMMDDtoDDMM, convertDDMMtoYYYYMMDD } from "../utils/dateUtils";
 
 export default function EditEvento() {
-  const { id, type } = useParams(); // type: 'agenda' ou 'compromisso'
+  const { id, type } = useParams();
   const navigate = useNavigate();
   const [evento, setEvento] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,6 +29,8 @@ export default function EditEvento() {
         data = await getCompromissoById(id);
         data.type = "compromisso";
       }
+      // Converter data para formato DD/MM para o formulário
+      data.date = convertYYYYMMDDtoDDMM(data.date);
       setEvento(data);
     } catch (err) {
       console.error("Erro ao carregar:", err);
@@ -42,7 +45,7 @@ export default function EditEvento() {
     setSaving(true);
     try {
       const data = {
-        date: formData.date,
+        date: convertDDMMtoYYYYMMDD(formData.date),
         start_time: formData.start_time,
         end_time: formData.end_time,
         title: formData.title,
