@@ -1,4 +1,4 @@
-# Agenda Bianca - Aplicação de Calendário com React + Vite
+# Agenda Kim - Aplicação de Calendário com React + Vite
 
 Aplicação moderna de agendamento com suporte a eventos, notificações push e sincronização em tempo real com Supabase.
 
