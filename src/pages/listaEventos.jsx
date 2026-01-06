@@ -77,7 +77,12 @@ export default function ListaEventos() {
         {keys.map((date) => (
           groups[date] ? (
             <div key={date} style={{ marginTop: 16 }}>
-              <h3 style={{ marginBottom: 8 }}>{new Date(date).toLocaleDateString()}</h3>
+              <h3 style={{ marginBottom: 8 }}>
+                {(() => {
+                  const [year, month, day] = date.split('-').map(Number)
+                  return new Date(year, month - 1, day).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
+                })()}
+              </h3>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
@@ -100,7 +105,12 @@ export default function ListaEventos() {
             </div>
           ) : (
             <div key={date} style={{ marginTop: 16 }}>
-              <h3 style={{ marginBottom: 8 }}>{new Date(date).toLocaleDateString()}</h3>
+              <h3 style={{ marginBottom: 8 }}>
+                {(() => {
+                  const [year, month, day] = date.split('-').map(Number)
+                  return new Date(year, month - 1, day).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
+                })()}
+              </h3>
               <p>Nenhum evento neste dia.</p>
               <div style={{ marginTop: 12 }}>
           <button onClick={() => navigate('/calendar')} className="btn-primary">Ver no calendário</button>

@@ -8,6 +8,30 @@ import { getCompromissos } from "../services/compromissoService";
 import { deleteAgenda } from "../services/agendaService";
 import { deleteCompromisso } from "../services/compromissoService";
 
+// Helper: extrai nome do arquivo de um data URL base64
+function getFileNameFromDataUrl(dataUrl) {
+  if (!dataUrl) return 'Arquivo'
+  
+  // Se for um data URL com mime type
+  if (dataUrl.startsWith('data:')) {
+    // Tentar extrair extensão do mime type
+    const mimeMatch = dataUrl.match(/data:([^/]+)\/([^;]+)/)
+    if (mimeMatch) {
+      const [, type, subtype] = mimeMatch
+      const extensions = {
+        'pdf': 'pdf',
+        'msword': 'doc',
+        'vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+        'plain': 'txt'
+      }
+      const ext = extensions[subtype] || subtype
+      return `Arquivo.${ext}`
+    }
+  }
+  
+  return 'Arquivo'
+}
+
 // Helper: gera labels de tempo a cada 1 hora entre hourStart e hourEnd
 function generateTimeSlots(hourStart = 7, hourEnd = 22) {
   const slots = [];
@@ -356,6 +380,44 @@ export default function ExpandDay() {
                       >
                         Copiar
                       </button>
+                    </div>
+                  )}
+
+                  {selectedEvent.raw?.anexo && selectedEvent.raw.anexo.length > 0 && (
+                    <div style={{ marginTop: 12, padding: 12, backgroundColor: '#f0f9ff', borderRadius: '6px', borderLeft: '4px solid var(--accent-pink)' }}>
+                      <strong style={{ display: 'block', marginBottom: 8 }}>📎 Anexos:</strong>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {selectedEvent.raw.anexo.map((file, idx) => {
+                          const isDataUrl = file && file.startsWith('data:')
+                          const fileName = isDataUrl ? getFileNameFromDataUrl(file) : (file?.split('/').pop() || 'Arquivo')
+                          
+                          return (
+                            <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e0f2fe' }}>
+                              <span style={{ fontSize: '14px', color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                                📄 {fileName}
+                              </span>
+                              <a
+                                href={file}
+                                download={fileName}
+                                style={{
+                                  background: 'var(--accent-pink)',
+                                  color: 'white',
+                                  padding: '4px 10px',
+                                  borderRadius: '4px',
+                                  textDecoration: 'none',
+                                  fontSize: '12px',
+                                  fontWeight: 500,
+                                  cursor: 'pointer',
+                                  whiteSpace: 'nowrap',
+                                  marginLeft: '8px'
+                                }}
+                              >
+                                Baixar
+                              </a>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   )}
                 </>
