@@ -129,8 +129,7 @@ export default function LoginForm() {
             isSignUp ? "Criar Conta" : "Entrar"
           )}
         </button>
-
-        {/* Toggle between Login and Signup */}
+      {/* Toggle between Login and Signup 
         <div className="auth-toggle">
           <span>
             {isSignUp ? "Já tem uma conta?" : "Não tem uma conta?"}
@@ -147,7 +146,7 @@ export default function LoginForm() {
           >
             {isSignUp ? "Entrar" : "Cadastrar"}
           </button>
-        </div>
+        </div> */}
       </form>
     </div>
   )

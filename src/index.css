@@ -476,7 +476,7 @@ button:focus, button:focus-visible {
 .expand-day-calendar .day-container {
   flex: 1;
   position: relative;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .expand-day-calendar .day-grid {
